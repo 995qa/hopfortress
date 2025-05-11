@@ -1,3 +1,15 @@
+# Hop-Fortress 2
+Hop-Fortress 2 is a simple mod that makes bunnyhopping easier.
+Added:
+- Autojump - Jump by holding spacebar
+- Duckjump - Jump while crouched
+
+Removed:
+- PreventBunnyHopping - bhop patch
+
+## Credit
+Hop-Fortress 2 uses the TF2C 2.0.0b4 source code for autojump and duckjump.
+
 # Source SDK 2013
 
 Source code for Source SDK 2013.
