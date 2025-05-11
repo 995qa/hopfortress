@@ -76,6 +76,8 @@ ConVar tf_movement_lost_footing_restick( "tf_movement_lost_footing_restick", "50
                                          "Early escape the lost footing condition if the player is moving slower than this across the ground" );
 ConVar tf_movement_lost_footing_friction( "tf_movement_lost_footing_friction", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT,
                                           "Ground friction for players who have lost their footing" );
+ConVar tf_autojump( "tf_autojump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Automatically jump while holding the jump button down" );
+ConVar tf_duckjump( "tf_duckjump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Toggles jumping while ducked" );
 
 extern ConVar cl_forwardspeed;
 extern ConVar cl_backspeed;
@@ -144,7 +146,7 @@ private:
 
 	bool		CheckWaterJumpButton( void );
 	void		AirDash( void );
-	void		PreventBunnyJumping();
+//	void		PreventBunnyJumping();
 	void		ToggleParachute( void );
 	void		CheckKartWallBumping();
 
@@ -1087,29 +1089,29 @@ void CTFGameMovement::AirDash( void )
 #define BUNNYJUMP_MAX_SPEED_FACTOR 1.2f
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Removed bhop patch :)
 //-----------------------------------------------------------------------------
-void CTFGameMovement::PreventBunnyJumping()
-{
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-		return;
-
-	// Speed at which bunny jumping is limited
-	float maxscaledspeed = BUNNYJUMP_MAX_SPEED_FACTOR * player->m_flMaxspeed;
-	if ( maxscaledspeed <= 0.0f )
-		return;
-
-	// Current player speed
-	float spd = mv->m_vecVelocity.Length();
-	if ( spd <= maxscaledspeed )
-		return;
-
-	// Apply this cropping fraction to velocity
-	float fraction = ( maxscaledspeed / spd );
-
-
-	mv->m_vecVelocity *= fraction;
-}
+//void CTFGameMovement::PreventBunnyJumping()
+//{
+//	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
+//		return;
+//
+//	// Speed at which bunny jumping is limited
+//	float maxscaledspeed = BUNNYJUMP_MAX_SPEED_FACTOR * player->m_flMaxspeed;
+//	if ( maxscaledspeed <= 0.0f )
+//		return;
+//
+//	// Current player speed
+//	float spd = mv->m_vecVelocity.Length();
+//	if ( spd <= maxscaledspeed )
+//		return;
+//
+//	// Apply this cropping fraction to velocity
+//	float fraction = ( maxscaledspeed / spd );
+//
+//
+//	mv->m_vecVelocity *= fraction;
+//}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1226,19 +1228,25 @@ bool CTFGameMovement::CheckJumpButton()
 	if ( player->GetFlags() & FL_DUCKING )
 	{
 		// Let a scout do it.
-		bool bAllow = ( bScout && !bOnGround );
+		bool bAllow = (bScout && !bOnGround) || tf_duckjump.GetBool();
 
 		if ( !bAllow )
 			return false;
 	}
 
 	// Cannot jump while in the unduck transition.
-	if ( ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) ) || ( player->m_Local.m_flDuckJumpTime > 0.0f ) )
+	if ( ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) ) || ( player->m_Local.m_flDuckJumpTime > 0.0f ) && !tf_duckjump.GetBool() )
 		return false;
 
-	// Cannot jump again until the jump button has been released.
+        // Hopefully autojump???
 	if ( mv->m_nOldButtons & IN_JUMP )
-		return false;
+	{
+		if ( !bOnGround )
+			return false;
+
+		if ( !tf_autojump.GetBool() )
+			return false;
+	}
 
 	// In air, so ignore jumps 
 	// (unless you are a scout or ghost or parachute
@@ -1263,8 +1271,9 @@ bool CTFGameMovement::CheckJumpButton()
 		m_pTFPlayer->m_Shared.SetAirDucked( 0 );
 		return true;
 	}
-
-	PreventBunnyJumping();
+	
+//      Removed
+//	PreventBunnyJumping();
 
 	// Start jump animation and player sound (specific TF animation and flags).
 	m_pTFPlayer->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
