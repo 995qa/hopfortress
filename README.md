@@ -1,5 +1,6 @@
 # Hop-Fortress 2
 Hop-Fortress 2 is a simple mod that makes bunnyhopping easier.
+
 Added:
 - Autojump - Jump by holding spacebar
 - Duckjump - Jump while crouched
